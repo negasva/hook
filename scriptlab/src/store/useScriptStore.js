@@ -6,26 +6,27 @@ import { supabase, authReady } from '../lib/supabase'
 
 /* ─── Supabase sync helpers ────────────────────────────────────────────────── */
 
-const groupRow = (g) => ({
-  id: g.id, name: g.name, parent_id: g.parentId ?? null,
+const groupRow = (g, userId) => ({
+  id: g.id, user_id: userId, name: g.name, parent_id: g.parentId ?? null,
   color: g.color, icon: g.icon, order: g.order,
 })
 
-const scriptRow = (s) => ({
-  id: s.id, title: s.title, group_id: s.groupId ?? null,
+const scriptRow = (s, userId) => ({
+  id: s.id, user_id: userId, title: s.title, group_id: s.groupId ?? null,
   hook: s.hook, rehook: s.rehook, content: s.content,
   finale: s.finale, cta: s.cta, objective: s.objective,
   idea: s.idea, created_at: s.createdAt, updated_at: s.updatedAt,
 })
 
-// Waits for auth before writing — errors logged visibly
+// Waits for auth before writing — includes user_id so RLS is satisfied
 const up = (table, data) => {
   if (!supabase) return
-  authReady.then(() =>
-    supabase.from(table).upsert(data).then(({ error }) => {
+  authReady.then((user) => {
+    if (!user) return
+    supabase.from(table).upsert({ ...data, user_id: user.id }).then(({ error }) => {
       if (error) console.error(`[ScriptLab] upsert ${table}:`, error.message, data)
-    }),
-  )
+    })
+  })
 }
 
 const del = (table, id) => {
@@ -51,13 +52,14 @@ export const useScriptStore = create(
       // Push all local data up to Supabase (used on first sync for a new user)
       _pushToSupabase: async () => {
         if (!supabase) return
-        await authReady
+        const user = await authReady
+        if (!user) return
         const { groups, scripts } = get()
         await Promise.all([
-          ...groups.map((g) => supabase.from('groups').upsert(groupRow(g)).then(({ error }) => {
+          ...groups.map((g) => supabase.from('groups').upsert(groupRow(g, user.id)).then(({ error }) => {
             if (error) console.error('[ScriptLab] push group:', error.message)
           })),
-          ...scripts.map((s) => supabase.from('scripts').upsert(scriptRow(s)).then(({ error }) => {
+          ...scripts.map((s) => supabase.from('scripts').upsert(scriptRow(s, user.id)).then(({ error }) => {
             if (error) console.error('[ScriptLab] push script:', error.message)
           })),
         ])
