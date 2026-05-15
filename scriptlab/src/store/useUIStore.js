@@ -1,12 +1,14 @@
 import { create } from 'zustand'
 
 export const useUIStore = create((set) => ({
-  activeGroupId: null,   // null → "All scripts"
+  activeGroupId: null,     // null → "All scripts"
   activeScriptId: null,
-  collapsedGroups: [],   // array of group IDs that are collapsed
+  collapsedGroups: [],     // group IDs that are collapsed
+  scriptListView: 'grid',  // 'grid' | 'list'
 
-  setActiveGroup: (id) => set({ activeGroupId: id }),
-  setActiveScript: (id) => set({ activeScriptId: id }),
+  setActiveGroup:     (id) => set({ activeGroupId: id }),
+  setActiveScript:    (id) => set({ activeScriptId: id }),
+  setScriptListView:  (v)  => set({ scriptListView: v }),
 
   toggleGroupCollapsed: (id) =>
     set((s) => ({
