@@ -9,7 +9,7 @@ ESTILO OBLIGATORIO:
 - Frases cortas. Incompletas si hace falta.
 - Palabras PROHIBIDAS: fascinante, cautivador, transformador, vital, crucial, revolucionario, potencial, sinergia, desbloquear, explorar, descubrir, paisaje (en sentido metafórico), reino, secretos
 - Sin saludos, sin conclusiones filosóficas, sin enumeración rígida
-- Mete imperfección humana cuando encaje: "o sea", "a ver", "tipo", "pues"`
+- Imperfección humana: dudas reales, opiniones sesgadas, gramática rota si suena más natural`
 
 /* ─── Prompts ─────────────────────────────────────────────────────────────── */
 
