@@ -24,6 +24,10 @@ export const useUIStore = create((set) => ({
     set({ theme: t })
   },
 
+  // ── Live context (updates instantly, no debounce — used by AI generation) ──
+  liveContext: { objective: '', idea: '' },
+  setLiveContext: (ctx) => set({ liveContext: ctx }),
+
   // ── Dialog (replaces window.confirm / window.alert) ──
   dialog: null,
   showDialog: (opts) => set({ dialog: opts }),

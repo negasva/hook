@@ -81,8 +81,9 @@ function EmptyState() {
 /* ─── ContextPanel ───────────────────────────────────────────────────────── */
 
 export default function ContextPanel() {
-  const updateScript   = useScriptStore((s) => s.updateScript)
-  const activeScriptId = useUIStore((s) => s.activeScriptId)
+  const updateScript    = useScriptStore((s) => s.updateScript)
+  const activeScriptId  = useUIStore((s) => s.activeScriptId)
+  const setLiveContext  = useUIStore((s) => s.setLiveContext)
 
   const script = useScriptStore(
     useCallback((s) => s.scripts.find((sc) => sc.id === activeScriptId) ?? null,
@@ -113,21 +114,27 @@ export default function ContextPanel() {
 
   const { debounced: debouncedFlush, cancel: cancelFlush } = useDebounce(flush, 500)
 
+  // Re-run whenever the script changes (covers Supabase hydration after mount)
   useEffect(() => {
     cancelFlush()
     if (script) {
-      setLocal({ objective: script.objective ?? '', idea: script.idea ?? '' })
+      const ctx = { objective: script.objective ?? '', idea: script.idea ?? '' }
+      setLocal(ctx)
+      setLiveContext(ctx)
       pendingPatch.current = {}
       setSaveState('idle')
     } else {
       setLocal(null)
+      setLiveContext({ objective: '', idea: '' })
     }
     return () => cancelFlush()
-  }, [activeScriptId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeScriptId, script?.objective, script?.idea]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = useCallback(
     (field, value) => {
       setLocal((prev) => (prev ? { ...prev, [field]: value } : prev))
+      // Update liveContext immediately — no debounce — so AI always reads fresh values
+      setLiveContext((prev) => ({ ...prev, [field]: value }))
       pendingPatch.current[field] = value
       setSaveState('saving')
       debouncedFlush()
