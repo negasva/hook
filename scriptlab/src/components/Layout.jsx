@@ -2,9 +2,11 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import Sidebar from './Sidebar'
 import WorkArea from './WorkArea'
 import RightPanel from './RightPanel'
+import Dialog from './Dialog'
 import Icon from './Icon'
 import { useScriptStore } from '../store/useScriptStore'
 import { useUIStore } from '../store/useUIStore'
+import { useDialog } from '../hooks/useDialog'
 
 /* ─── Layout ──────────────────────────────────────────────────────────────── */
 
@@ -18,6 +20,7 @@ export default function Layout() {
         <RightPanel />
       </div>
       <StatusBar />
+      <Dialog />
     </div>
   )
 }
@@ -101,13 +104,22 @@ function Header() {
     setActiveScript(script.id)
   }, [addScript, activeGroupId, setActiveScript])
 
-  const handleDeleteActive = useCallback(() => {
+  const { confirm } = useDialog()
+
+  const handleDeleteActive = useCallback(async () => {
     if (!activeScriptId) return
-    if (window.confirm('¿Eliminar este guión? Esta acción no se puede deshacer.')) {
+    const ok = await confirm({
+      icon: 'trash',
+      variant: 'danger',
+      title: 'Eliminar guión',
+      message: '¿Eliminar este guión? Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+    })
+    if (ok) {
       setActiveScript(null)
       deleteScript(activeScriptId)
     }
-  }, [activeScriptId, deleteScript, setActiveScript])
+  }, [activeScriptId, deleteScript, setActiveScript, confirm])
 
   const fileItems = [
     { label: 'Nuevo guión',  icon: 'script',   action: handleNewScript },

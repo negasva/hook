@@ -23,4 +23,9 @@ export const useUIStore = create((set) => ({
     document.documentElement.setAttribute('data-theme', t)
     set({ theme: t })
   },
+
+  // ── Dialog (replaces window.confirm / window.alert) ──
+  dialog: null,
+  showDialog: (opts) => set({ dialog: opts }),
+  hideDialog: () => set({ dialog: null }),
 }))
