@@ -15,9 +15,10 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useScriptStore } from '../store/useScriptStore'
 import { useUIStore } from '../store/useUIStore'
+import { useShallow } from 'zustand/react/shallow'
 import Icon from './Icon'
 
 /* ─── Script row (leaf node) ─────────────────────────────────────────────── */
@@ -43,12 +44,14 @@ function ScriptRow({ script, depth }) {
 /* ─── Sortable group row ─────────────────────────────────────────────────── */
 
 function SortableGroupRow({ group, depth }) {
-  const scripts       = useScriptStore((s) => s.scripts.filter((sc) => sc.groupId === group.id))
-  const childGroups   = useScriptStore((s) =>
-    s.groups.filter((g) => g.parentId === group.id).sort((a, b) => a.order - b.order),
-  )
-  const updateGroup   = useScriptStore((s) => s.updateGroup)
-  const addGroup      = useScriptStore((s) => s.addGroup)
+  const scripts     = useScriptStore(useShallow((s) => s.scripts.filter((sc) => sc.groupId === group.id)))
+  const childGroups = useScriptStore(useShallow((s) =>
+    [...s.groups.filter((g) => g.parentId === group.id)].sort((a, b) => a.order - b.order),
+  ))
+  const updateGroup = useScriptStore((s) => s.updateGroup)
+  const addGroup    = useScriptStore((s) => s.addGroup)
+
+  const childGroupIds = useMemo(() => childGroups.map((g) => g.id), [childGroups])
 
   const activeGroupId       = useUIStore((s) => s.activeGroupId)
   const setActiveGroup      = useUIStore((s) => s.setActiveGroup)
@@ -156,7 +159,7 @@ function SortableGroupRow({ group, depth }) {
               onDragEnd={handleDragEndChild}
             >
               <SortableContext
-                items={childGroups.map((g) => g.id)}
+                items={childGroupIds}
                 strategy={verticalListSortingStrategy}
               >
                 {childGroups.map((child) => (
@@ -203,9 +206,11 @@ export default function Sidebar() {
 
   const [dragActiveId, setDragActiveId] = useState(null)
 
-  const rootGroups = groups
-    .filter((g) => g.parentId === null)
-    .sort((a, b) => a.order - b.order)
+  const rootGroups   = useMemo(
+    () => groups.filter((g) => g.parentId === null).sort((a, b) => a.order - b.order),
+    [groups],
+  )
+  const rootGroupIds = useMemo(() => rootGroups.map((g) => g.id), [rootGroups])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -275,7 +280,7 @@ export default function Sidebar() {
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={rootGroups.map((g) => g.id)}
+            items={rootGroupIds}
             strategy={verticalListSortingStrategy}
           >
             {rootGroups.map((group) => (
