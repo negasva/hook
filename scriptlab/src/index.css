@@ -1761,3 +1761,181 @@
 .ai-shimmer-line-bone {
   height: 11px;
 }
+
+/* ─── Nav Dropdown ────────────────────────────────────────────────────────── */
+
+.nav-menu {
+  position: relative;
+}
+
+.nav-item.is-open {
+  color: var(--color-text-primary);
+  background: var(--color-surface-hover);
+}
+
+.nav-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 200px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-1) 0;
+  z-index: 100;
+  animation: fade-up-in 120ms var(--ease-out) both;
+}
+
+.nav-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 6px var(--space-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-align: left;
+  transition:
+    background var(--duration-fast),
+    color var(--duration-fast);
+}
+
+.nav-dropdown-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.nav-dropdown-item:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.nav-dropdown-sep {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--space-1) 0;
+}
+
+.nav-dropdown-shortcut {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  letter-spacing: var(--tracking-wide);
+}
+
+/* ─── Theme Toggle Button ─────────────────────────────────────────────────── */
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition:
+    border-color var(--duration-fast),
+    color var(--duration-fast),
+    background var(--duration-fast);
+}
+
+.theme-toggle:hover {
+  border-color: var(--color-gold-dim);
+  color: var(--color-gold);
+  background: var(--color-gold-subtle);
+}
+
+/* ─── Sidebar: rename input + action buttons ──────────────────────────────── */
+
+.sb-group-name-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--color-bg);
+  border: 1px solid var(--color-gold-dim);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+.sb-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text-muted);
+  opacity: 0;
+  padding: 0;
+  transition:
+    opacity var(--duration-fast),
+    border-color var(--duration-fast),
+    color var(--duration-fast),
+    background var(--duration-fast);
+}
+
+.sb-group-row:hover .sb-action-btn { opacity: 1; }
+
+.sb-action-btn:hover {
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-hover);
+}
+
+.sb-action-delete:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* ─── ScriptList: card delete button ─────────────────────────────────────── */
+
+.sl-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sl-card-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text-muted);
+  opacity: 0;
+  padding: 0;
+  transition:
+    opacity var(--duration-fast),
+    border-color var(--duration-fast),
+    color var(--duration-fast),
+    background var(--duration-fast);
+}
+
+.sl-card:hover .sl-card-delete,
+.sl-card.is-active .sl-card-delete { opacity: 1; }
+
+.sl-card-delete:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}

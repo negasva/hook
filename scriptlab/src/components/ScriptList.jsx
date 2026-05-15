@@ -6,14 +6,27 @@ import Icon from './Icon'
 /* ─── Script card ─────────────────────────────────────────────────────────── */
 
 function ScriptCard({ script, group, isActive, view, onClick, index = 0 }) {
+  const deleteScript    = useScriptStore((s) => s.deleteScript)
+  const activeScriptId  = useUIStore((s) => s.activeScriptId)
+  const setActiveScript = useUIStore((s) => s.setActiveScript)
+
   const hook    = script.hook ?? ''
   const preview = hook.length > 60 ? hook.slice(0, 60) + '…' : hook
   const date    = formatDate(script.updatedAt)
 
+  const handleDelete = (e) => {
+    e.stopPropagation()
+    if (activeScriptId === script.id) setActiveScript(null)
+    deleteScript(script.id)
+  }
+
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       className={`sl-card${isActive ? ' is-active' : ''}${view === 'list' ? ' is-list' : ''}`}
       onClick={onClick}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onClick()}
       style={{ '--i': index }}
     >
       {/* Group badge */}
@@ -36,9 +49,14 @@ function ScriptCard({ script, group, isActive, view, onClick, index = 0 }) {
           <Icon name="calendar" size={11} className="sl-date-icon" />
           {date}
         </span>
-        {isActive && <span className="sl-card-active-dot" />}
+        <div className="sl-card-actions">
+          {isActive && <span className="sl-card-active-dot" />}
+          <button className="sl-card-delete" onClick={handleDelete} title="Eliminar guión" tabIndex={-1}>
+            <Icon name="trash" size={11} />
+          </button>
+        </div>
       </div>
-    </button>
+    </div>
   )
 }
 
