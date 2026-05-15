@@ -1,9 +1,13 @@
-import ScriptList from './ScriptList'
+import { useUIStore }   from '../store/useUIStore'
+import ScriptList   from './ScriptList'
+import ScriptEditor from './ScriptEditor'
 
 export default function WorkArea() {
+  const activeScriptId = useUIStore((s) => s.activeScriptId)
+
   return (
     <main className="work-area">
-      <ScriptList />
+      {activeScriptId ? <ScriptEditor /> : <ScriptList />}
     </main>
   )
 }
