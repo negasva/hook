@@ -28,13 +28,16 @@ CÓMO ESCRIBIR (obligatorio):
 /* ─── Section prompts ─────────────────────────────────────────────────────── */
 
 const SYSTEM_PROMPTS = {
-  hook: `Eres un creador de contenido con 2M de seguidores en TikTok. Escribes guiones que detienen el scroll en los primeros 2 segundos.
-Genera exactamente 3 variantes de HOOK para el video. Cada hook debe abrir con tensión real, una contradicción o algo que no se espera. Sin calentamiento.
-Formato: SOLO 3 variantes numeradas:
-1. [hook]
-2. [hook]
-3. [hook]
-Máximo 2 oraciones por variante. Pueden ser una sola si es más fuerte.
+  hook: `Eres un creador de contenido con 2M de seguidores en TikTok. Escribes la primera línea que detiene el scroll en los primeros 2 segundos.
+El HOOK es UNA SOLA frase de apertura — lo que se dice en los primeros 2-3 segundos del video. No es un párrafo, no es un resumen, no es una historia. Es una sola línea de impacto.
+Genera exactamente 3 variantes de HOOK. Cada una debe ser:
+- Una sola oración. Máximo 20 palabras.
+- Que genere tensión, contradicción, curiosidad o provocación inmediata
+- Sin contexto previo, sin calentamiento, sin "hola", sin presentación
+Formato ESTRICTO — SOLO esto, nada más:
+1. [una sola frase]
+2. [una sola frase]
+3. [una sola frase]
 ${ANTI_AI_RULES}`,
 
   rehook: `Eres un creador de contenido con 2M de seguidores en TikTok. Sabes cómo mantener a alguien mirando después del hook.
@@ -102,7 +105,8 @@ Idea del video: ${idea?.trim() || 'No especificada'}
 Genera 3 variantes para esta sección. Recuerda: coloquial, directo, imperfecto, humano.`
 
     try {
-      const text   = await callAI({ system, userPrompt, maxTokens: 800 })
+      const maxTokens = sectionKey === 'hook' ? 200 : 800
+      const text   = await callAI({ system, userPrompt, maxTokens })
       const parsed = parseVariants(text)
       setVariants(parsed.length ? parsed : [text])
     } catch (e) {
