@@ -10,16 +10,9 @@ export function useDataInit() {
     if (!supabase) return // localStorage-only mode
 
     const init = async () => {
- claude/remove-vite-api-prefix-zqYpU
-      const { error: authError } = await supabase.auth.signInAnonymously()
-      if (authError) {
-        // Auth not enabled or failed — keep localStorage data intact
-        console.warn('[ScriptLab] Supabase auth failed, using localStorage:', authError.message)
-
       const user = await authReady
       if (!user) {
         console.warn('[ScriptLab] No user after auth — check Supabase anonymous auth is enabled')
-main
         return
       }
 
@@ -32,15 +25,14 @@ main
       if (ge) { console.error('[ScriptLab] load groups error:', ge.message); return }
       if (se) { console.error('[ScriptLab] load scripts error:', se.message); return }
 
-      console.log(`[ScriptLab] loaded ${groupRows?.length ?? 0} groups, ${scriptRows?.length ?? 0} scripts`)
-
-      const hasRemote = groupRows.length > 0 || scriptRows.length > 0
+      const hasRemote = (groupRows?.length ?? 0) > 0 || (scriptRows?.length ?? 0) > 0
 
       if (!hasRemote) {
-        // Supabase is empty for this user — push local data up instead of wiping it
         await pushToSupabase()
         return
       }
+
+      console.log(`[ScriptLab] loaded ${groupRows.length} groups, ${scriptRows.length} scripts`)
 
       const groups = groupRows.map((r) => ({
         id:       r.id,
@@ -69,11 +61,6 @@ main
       hydrate({ groups, scripts })
     }
 
-claude/remove-vite-api-prefix-zqYpU
-    init().catch(console.error)
-  }, [hydrate, pushToSupabase])
-
     init().catch((e) => console.error('[ScriptLab] init error:', e.message))
-  }, [hydrate])
- main
+  }, [hydrate, pushToSupabase])
 }
