@@ -15,7 +15,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { useScriptStore } from '../store/useScriptStore'
 import { useUIStore } from '../store/useUIStore'
 import { useShallow } from 'zustand/react/shallow'
@@ -49,9 +49,24 @@ function SortableGroupRow({ group, depth }) {
     [...s.groups.filter((g) => g.parentId === group.id)].sort((a, b) => a.order - b.order),
   ))
   const updateGroup = useScriptStore((s) => s.updateGroup)
+  const deleteGroup = useScriptStore((s) => s.deleteGroup)
   const addGroup    = useScriptStore((s) => s.addGroup)
 
   const childGroupIds = useMemo(() => childGroups.map((g) => g.id), [childGroups])
+
+  const [isEditing, setIsEditing] = useState(false)
+  const [editName, setEditName]   = useState(group.name)
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    if (isEditing) inputRef.current?.select()
+  }, [isEditing])
+
+  const handleRename = () => {
+    const name = editName.trim()
+    if (name && name !== group.name) updateGroup(group.id, { name })
+    setIsEditing(false)
+  }
 
   const activeGroupId       = useUIStore((s) => s.activeGroupId)
   const setActiveGroup      = useUIStore((s) => s.setActiveGroup)
@@ -124,26 +139,60 @@ function SortableGroupRow({ group, depth }) {
           <Icon name={group.icon} size={13} />
         </span>
 
-        {/* Name (click = select group) */}
-        <button className="sb-group-name" onClick={handleSelectGroup}>
-          {group.name}
-        </button>
+        {/* Name — click = select, double-click = rename */}
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            className="sb-group-name-input"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            onBlur={handleRename}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleRename()
+              if (e.key === 'Escape') { setEditName(group.name); setIsEditing(false) }
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <button
+            className="sb-group-name"
+            onClick={handleSelectGroup}
+            onDoubleClick={() => { setEditName(group.name); setIsEditing(true) }}
+          >
+            {group.name}
+          </button>
+        )}
 
         {/* Script count */}
-        {scripts.length > 0 && (
+        {scripts.length > 0 && !isEditing && (
           <span className="sb-count">{scripts.length}</span>
         )}
 
-        {/* Add subgroup — only on depth 0 */}
-        {depth === 0 && (
-          <button
-            className="sb-add-sub"
-            onClick={handleAddSubgroup}
-            title="Nuevo subgrupo"
-            tabIndex={-1}
-          >
-            <Icon name="plus" size={11} />
-          </button>
+        {/* Group actions */}
+        {!isEditing && (
+          <>
+            {depth === 0 && (
+              <button className="sb-add-sub" onClick={handleAddSubgroup} title="Nuevo subgrupo" tabIndex={-1}>
+                <Icon name="plus" size={11} />
+              </button>
+            )}
+            <button
+              className="sb-action-btn"
+              onClick={(e) => { e.stopPropagation(); setEditName(group.name); setIsEditing(true) }}
+              title="Renombrar"
+              tabIndex={-1}
+            >
+              <Icon name="edit" size={10} />
+            </button>
+            <button
+              className="sb-action-btn sb-action-delete"
+              onClick={(e) => { e.stopPropagation(); deleteGroup(group.id) }}
+              title="Eliminar grupo"
+              tabIndex={-1}
+            >
+              <Icon name="trash" size={10} />
+            </button>
+          </>
         )}
       </div>
 

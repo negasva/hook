@@ -1,10 +1,11 @@
 import { create } from 'zustand'
 
 export const useUIStore = create((set) => ({
-  activeGroupId: null,     // null → "All scripts"
+  activeGroupId: null,
   activeScriptId: null,
-  collapsedGroups: [],     // group IDs that are collapsed
-  scriptListView: 'grid',  // 'grid' | 'list'
+  collapsedGroups: [],
+  scriptListView: 'grid',
+  theme: localStorage.getItem('sl-theme') ?? 'dark',
 
   setActiveGroup:     (id) => set({ activeGroupId: id }),
   setActiveScript:    (id) => set({ activeScriptId: id }),
@@ -16,4 +17,10 @@ export const useUIStore = create((set) => ({
         ? s.collapsedGroups.filter((gid) => gid !== id)
         : [...s.collapsedGroups, id],
     })),
+
+  setTheme: (t) => {
+    localStorage.setItem('sl-theme', t)
+    document.documentElement.setAttribute('data-theme', t)
+    set({ theme: t })
+  },
 }))
