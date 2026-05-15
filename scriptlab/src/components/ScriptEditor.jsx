@@ -224,6 +224,9 @@ export default function ScriptEditor() {
 
   return (
     <div className="ed-container">
+      {/* ── Save progress bar ── */}
+      <div className={`ed-progress-bar${saveState === 'saving' ? ' is-saving' : saveState === 'saved' ? ' is-saved' : ''}`} />
+
       {/* ── Toolbar ── */}
       <div className="ed-toolbar">
         <button className="ed-back-btn" onClick={handleBack}>

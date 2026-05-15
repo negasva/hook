@@ -4,9 +4,16 @@ export default function AIVariants({ variants, loading, error, sectionColor, onS
   return (
     <div className="ai-panel" style={{ '--section-color': sectionColor }}>
       {loading && (
-        <div className="ai-loading">
-          <span className="ai-spinner" />
-          <span className="ai-loading-text">Generando variantes…</span>
+        <div className="ai-shimmer">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="ai-shimmer-row" style={{ '--row': i }}>
+              <div className="ai-shimmer-bone ai-shimmer-num-bone" />
+              <div className="ai-shimmer-lines">
+                <div className="ai-shimmer-bone ai-shimmer-line-bone" style={{ width: `${68 + i * 9}%` }} />
+                <div className="ai-shimmer-bone ai-shimmer-line-bone" style={{ width: '42%' }} />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

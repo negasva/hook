@@ -5,7 +5,7 @@ import Icon from './Icon'
 
 /* ─── Script card ─────────────────────────────────────────────────────────── */
 
-function ScriptCard({ script, group, isActive, view, onClick }) {
+function ScriptCard({ script, group, isActive, view, onClick, index = 0 }) {
   const hook    = script.hook ?? ''
   const preview = hook.length > 60 ? hook.slice(0, 60) + '…' : hook
   const date    = formatDate(script.updatedAt)
@@ -14,6 +14,7 @@ function ScriptCard({ script, group, isActive, view, onClick }) {
     <button
       className={`sl-card${isActive ? ' is-active' : ''}${view === 'list' ? ' is-list' : ''}`}
       onClick={onClick}
+      style={{ '--i': index }}
     >
       {/* Group badge */}
       {group && (
@@ -141,7 +142,7 @@ export default function ScriptList() {
       ) : (
         <div className={`sl-scroll`}>
           <div className={`sl-grid${scriptListView === 'list' ? ' is-list' : ''}`}>
-            {visible.map((script) => {
+            {visible.map((script, index) => {
               const group = groups.find((g) => g.id === script.groupId) ?? null
               return (
                 <ScriptCard
@@ -151,6 +152,7 @@ export default function ScriptList() {
                   isActive={activeScriptId === script.id}
                   view={scriptListView}
                   onClick={() => setActiveScript(script.id)}
+                  index={index}
                 />
               )
             })}
