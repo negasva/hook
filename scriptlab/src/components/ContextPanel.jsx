@@ -177,10 +177,27 @@ export default function ContextPanel() {
 
   /* ── Key questions ── */
 
+  const [answers, setAnswers] = useState({})
+
   const handleAskQuestions = useCallback(() => {
-    if (questions) { clearQuestions(); return }
+    if (questions) { clearQuestions(); setAnswers({}); return }
     generateQuestions({ objective: local?.objective, idea: local?.idea })
   }, [questions, clearQuestions, generateQuestions, local])
+
+  const handleAnswerChange = useCallback((i, value) => {
+    setAnswers((prev) => ({ ...prev, [i]: value }))
+  }, [])
+
+  const handleApplyAnswers = useCallback(() => {
+    const filled = questions
+      ?.map((q, i) => answers[i]?.trim() ? `- ${q}\n  Respuesta: ${answers[i].trim()}` : null)
+      .filter(Boolean)
+    if (!filled?.length) return
+    const addition = `\n\nRespuestas a preguntas clave:\n${filled.join('\n')}`
+    handleChange('idea', (local?.idea ?? '') + addition)
+    clearQuestions()
+    setAnswers({})
+  }, [questions, answers, local, handleChange, clearQuestions])
 
   return (
     <>
@@ -309,14 +326,30 @@ export default function ContextPanel() {
               </button>
 
               {questions && (
-                <ol className="cp-questions-list">
-                  {questions.map((q, i) => (
-                    <li key={i} className="cp-question-item">
-                      <span className="cp-question-num">{i + 1}</span>
-                      <span className="cp-question-text">{q}</span>
-                    </li>
-                  ))}
-                </ol>
+                <>
+                  <ol className="cp-questions-list">
+                    {questions.map((q, i) => (
+                      <li key={i} className="cp-question-item">
+                        <span className="cp-question-num">{i + 1}</span>
+                        <div className="cp-question-body">
+                          <span className="cp-question-text">{q}</span>
+                          <textarea
+                            className="cp-question-answer"
+                            placeholder="Tu respuesta..."
+                            value={answers[i] ?? ''}
+                            onChange={(e) => handleAnswerChange(i, e.target.value)}
+                            rows={2}
+                          />
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                  {Object.values(answers).some((a) => a?.trim()) && (
+                    <button className="cp-apply-answers-btn" onClick={handleApplyAnswers}>
+                      <Icon name="check" size={12} /> Aplicar respuestas al contexto
+                    </button>
+                  )}
+                </>
               )}
             </div>
 
