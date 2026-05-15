@@ -42,6 +42,8 @@ const SEED_SCRIPTS = [
     finale:
       'Con este método pasé de 20 a 80 ventas mensuales en 60 días sin aumentar el presupuesto de ads.',
     cta: 'Enlace en bio para ver el caso completo.',
+    objective: 'Vender producto, Generar leads',
+    idea: 'Mostrar la transformación de ventas usando el método de presentación enfocado en beneficios.',
     groupId: 'g-social-ads',
     createdAt: '2025-01-10T09:00:00.000Z',
     updatedAt: '2025-01-10T09:00:00.000Z',
@@ -56,6 +58,8 @@ const SEED_SCRIPTS = [
     finale:
       'El contenido consistente no requiere creatividad infinita. Requiere un sistema.',
     cta: 'Guarda este video y úsalo como referencia cada lunes.',
+    objective: 'Educar',
+    idea: 'Framework 3x3 para generar 90 días de contenido con solo 3 preguntas y 3 formatos.',
     groupId: 'g-education',
     createdAt: '2025-01-14T11:30:00.000Z',
     updatedAt: '2025-01-15T08:20:00.000Z',
@@ -70,6 +74,8 @@ const SEED_SCRIPTS = [
     finale:
       'La lección: valida rápido, pero construye el sistema antes de escalar. En ese orden.',
     cta: 'Comenta "sistema" y te mando el checklist que uso hoy.',
+    objective: 'Ganar followers, Visibilidad de marca',
+    idea: 'Historia personal de pérdida de 10k por no tener infraestructura al escalar.',
     groupId: 'g-marketing',
     createdAt: '2025-01-18T16:00:00.000Z',
     updatedAt: '2025-01-18T16:00:00.000Z',
@@ -148,6 +154,8 @@ export const useScriptStore = create((set, get) => ({
       content: fields.content ?? '',
       finale: fields.finale ?? '',
       cta: fields.cta ?? '',
+      objective: fields.objective ?? '',
+      idea: fields.idea ?? '',
       groupId: fields.groupId ?? null,
       createdAt: ts,
       updatedAt: ts,

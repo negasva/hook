@@ -1142,3 +1142,213 @@
 
 /* Bottom spacer so last section isn't flush with bottom */
 .ed-bottom-spacer { height: var(--space-12); }
+
+/* ─── ContextPanel ────────────────────────────────────────────────────────── */
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Header ── */
+
+.cp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  height: 48px;
+  padding: 0 var(--space-4);
+  flex-shrink: 0;
+  background: rgba(10, 10, 15, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.cp-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cp-header-icon {
+  display: flex;
+  align-items: center;
+  color: var(--color-gold);
+  opacity: 0.8;
+}
+
+.cp-header-title {
+  font-size: var(--text-base);
+  font-weight: 500;
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-text-primary);
+}
+
+.cp-save {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--color-text-muted);
+  transition: color var(--duration-normal);
+}
+.cp-save.is-saved { color: #34d399; }
+
+.cp-save-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--color-gold);
+  animation: ed-pulse 800ms ease-in-out infinite alternate;
+}
+
+/* ── Scroll ── */
+
+.cp-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+}
+
+/* ── Body ── */
+
+.cp-body {
+  padding: var(--space-5) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Field block */
+.cp-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.cp-field-label {
+  display: block;
+}
+
+.cp-field-divider {
+  height: 1px;
+  background: var(--color-border-subtle);
+  margin: var(--space-5) 0;
+}
+
+/* Objective input */
+.cp-input {
+  width: 100%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  outline: none;
+  caret-color: var(--color-gold);
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+.cp-input::placeholder { color: var(--color-text-muted); font-style: italic; }
+.cp-input:focus { border-color: var(--color-gold-dim); }
+
+/* Chips */
+.cp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.cp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px var(--space-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+.cp-chip:hover {
+  border-color: var(--chip-color);
+  color: var(--chip-color);
+  background: color-mix(in srgb, var(--chip-color) 8%, transparent);
+}
+.cp-chip.is-active {
+  border-color: var(--chip-color);
+  color: var(--chip-color);
+  background: color-mix(in srgb, var(--chip-color) 12%, transparent);
+  font-weight: 500;
+}
+
+.cp-chip-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--chip-color);
+  flex-shrink: 0;
+}
+
+/* Idea textarea */
+.cp-textarea {
+  width: 100%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-loose);
+  color: var(--color-text-primary);
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  caret-color: var(--color-gold);
+  transition: border-color var(--duration-fast) var(--ease-out);
+  display: block;
+}
+.cp-textarea::placeholder { color: var(--color-text-muted); font-style: italic; }
+.cp-textarea:focus { border-color: var(--color-gold-dim); }
+
+/* ── Empty state ── */
+
+.cp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-10) var(--space-4);
+  text-align: center;
+  min-height: 200px;
+}
+
+.cp-empty-icon {
+  color: var(--color-text-muted);
+  opacity: 0.3;
+  margin-bottom: var(--space-2);
+}
+
+.cp-empty-label {
+  color: var(--color-text-muted);
+}
+
+.cp-empty-hint {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: var(--leading-loose);
+  max-width: 200px;
+}
