@@ -2,11 +2,10 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { newId } from '../utils/id'
 import { now } from '../utils/date'
-import { supabase } from '../lib/supabase'
+import { supabase, authReady } from '../lib/supabase'
 
 /* ─── Supabase sync helpers ────────────────────────────────────────────────── */
 
-// Convert store shapes → DB row shapes
 const groupRow = (g) => ({
   id: g.id, name: g.name, parent_id: g.parentId ?? null,
   color: g.color, icon: g.icon, order: g.order,
@@ -19,12 +18,23 @@ const scriptRow = (s) => ({
   idea: s.idea, created_at: s.createdAt, updated_at: s.updatedAt,
 })
 
-// Fire-and-forget — local state is source of truth, Supabase is synced after
+// Waits for auth before writing — errors logged visibly
 const up = (table, data) => {
-  supabase?.from(table).upsert(data).then()
+  if (!supabase) return
+  authReady.then(() =>
+    supabase.from(table).upsert(data).then(({ error }) => {
+      if (error) console.error(`[ScriptLab] upsert ${table}:`, error.message, data)
+    }),
+  )
 }
+
 const del = (table, id) => {
-  supabase?.from(table).delete().eq('id', id).then()
+  if (!supabase) return
+  authReady.then(() =>
+    supabase.from(table).delete().eq('id', id).then(({ error }) => {
+      if (error) console.error(`[ScriptLab] delete ${table}:`, error.message, id)
+    }),
+  )
 }
 
 /* ─── Store ────────────────────────────────────────────────────────────────── */
