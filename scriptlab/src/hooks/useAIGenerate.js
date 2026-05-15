@@ -60,12 +60,6 @@ export function useAIGenerate() {
   const [error, setError]       = useState(null)
 
   const generate = useCallback(async ({ sectionKey, objective, idea }) => {
-    const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
-    if (!apiKey) {
-      setError('Falta VITE_ANTHROPIC_API_KEY en el archivo .env')
-      return
-    }
-
     setLoading(true)
     setVariants(null)
     setError(null)
@@ -75,22 +69,38 @@ Idea del video: ${idea?.trim() || 'No especificada'}
 
 Genera 3 variantes para esta sección basándote en el contexto anterior.`
 
+    const body = {
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 800,
+      system: SYSTEM_PROMPTS[sectionKey] ?? SYSTEM_PROMPTS.hook,
+      messages: [{ role: 'user', content: userPrompt }],
+    }
+
+    // Dev: call Anthropic directly from browser (requires VITE_ANTHROPIC_API_KEY in .env)
+    // Prod: call through /api/generate serverless proxy (set ANTHROPIC_API_KEY in Vercel)
+    const devApiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
+    const useDirect = import.meta.env.DEV && devApiKey
+
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 800,
-          system: SYSTEM_PROMPTS[sectionKey] ?? SYSTEM_PROMPTS.hook,
-          messages: [{ role: 'user', content: userPrompt }],
-        }),
-      })
+      let res
+      if (useDirect) {
+        res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': devApiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true',
+          },
+          body: JSON.stringify(body),
+        })
+      } else {
+        res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+      }
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
