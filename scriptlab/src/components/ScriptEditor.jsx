@@ -282,8 +282,8 @@ export default function ScriptEditor() {
                 config={sec}
                 value={local[sec.key]}
                 onChange={handleChange}
-                objective={local.objective}
-                idea={local.idea}
+                objective={script?.objective}
+                idea={script?.idea}
                 defaultOpen={i === 0}   // only hook open by default
               />
             ))}

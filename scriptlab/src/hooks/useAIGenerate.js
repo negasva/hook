@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { callAI } from '../lib/callAI'
 
 const SYSTEM_PROMPTS = {
   hook: `Eres un experto en copywriting para video corto (TikTok, Reels, YouTube Shorts).
@@ -50,7 +51,6 @@ function parseVariants(text) {
     if (match) variants.push(match[1].trim())
   }
   if (variants.length >= 2) return variants.slice(0, 3)
-  // fallback: split by blank lines
   return text.split(/\n\n+/).map((s) => s.trim()).filter(Boolean).slice(0, 3)
 }
 
@@ -64,60 +64,14 @@ export function useAIGenerate() {
     setVariants(null)
     setError(null)
 
+    const system     = SYSTEM_PROMPTS[sectionKey] ?? SYSTEM_PROMPTS.hook
     const userPrompt = `Objetivo del video: ${objective?.trim() || 'No especificado'}
 Idea del video: ${idea?.trim() || 'No especificada'}
 
 Genera 3 variantes para esta sección basándote en el contexto anterior.`
 
-    const systemPrompt = SYSTEM_PROMPTS[sectionKey] ?? SYSTEM_PROMPTS.hook
-
-    // Dev: call Groq directly from browser (requires VITE_GROQ_API_KEY in .env)
-    // Prod: call through /api/generate serverless proxy (set GROQ_API_KEY in Vercel)
-    const devApiKey = import.meta.env.VITE_GROQ_API_KEY
-    const useDirect = import.meta.env.DEV && devApiKey
-
     try {
-      let text
-      if (useDirect) {
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${devApiKey}`,
-          },
-          body: JSON.stringify({
-            model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPrompt },
-            ],
-            max_tokens: 800,
-            temperature: 0.8,
-          }),
-        })
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}))
-          throw new Error(err?.error?.message ?? `Error ${res.status}`)
-        }
-        const data = await res.json()
-        text = data.choices?.[0]?.message?.content ?? ''
-      } else {
-        const res = await fetch('/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system: systemPrompt,
-            messages: [{ role: 'user', content: userPrompt }],
-            max_tokens: 800,
-          }),
-        })
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}))
-          throw new Error(err?.error?.message ?? `Error ${res.status}`)
-        }
-        const data = await res.json()
-        text = data.content?.[0]?.text ?? ''
-      }
+      const text   = await callAI({ system, userPrompt, maxTokens: 800 })
       const parsed = parseVariants(text)
       setVariants(parsed.length ? parsed : [text])
     } catch (e) {
