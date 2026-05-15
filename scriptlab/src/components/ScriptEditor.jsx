@@ -2,8 +2,10 @@ import { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react
 import { useScriptStore } from '../store/useScriptStore'
 import { useUIStore }    from '../store/useUIStore'
 import { useDebounce }   from '../hooks/useDebounce'
+import { useAIGenerate } from '../hooks/useAIGenerate'
 import { formatDate }    from '../utils/date'
 import Icon              from './Icon'
+import AIVariants        from './AIVariants'
 
 /* ─── Section config ──────────────────────────────────────────────────────── */
 
@@ -68,9 +70,21 @@ function AutoTextarea({ value, onChange, placeholder, sectionColor }) {
 
 /* ─── Accordion section ──────────────────────────────────────────────────── */
 
-function Section({ config, value, onChange, defaultOpen = true }) {
+function Section({ config, value, onChange, objective, idea, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen)
   const count = (value ?? '').length
+  const { generate, loading, variants, error, clear } = useAIGenerate()
+
+  const handleGenerate = () => {
+    generate({ sectionKey: config.key, objective, idea })
+  }
+
+  const handleSelect = (variant) => {
+    onChange(config.key, variant)
+    clear()
+  }
+
+  const showPanel = loading || variants || error
 
   return (
     <div className={`ed-section${open ? ' is-open' : ''}`} style={{ '--section-color': config.color }}>
@@ -95,6 +109,33 @@ function Section({ config, value, onChange, defaultOpen = true }) {
             placeholder={config.placeholder}
             sectionColor={config.color}
           />
+
+          <div className="ai-trigger-row">
+            <button
+              className={`ai-btn${loading ? ' is-loading' : ''}`}
+              onClick={handleGenerate}
+              disabled={loading}
+              type="button"
+              style={{ '--section-color': config.color }}
+            >
+              {loading
+                ? <span className="ai-btn-spinner" />
+                : <span className="ai-btn-icon">✨</span>}
+              Generar con IA
+            </button>
+          </div>
+
+          {showPanel && (
+            <AIVariants
+              variants={variants}
+              loading={loading}
+              error={error}
+              sectionColor={config.color}
+              onSelect={handleSelect}
+              onRegenerate={handleGenerate}
+              onClose={clear}
+            />
+          )}
         </div>
       )}
     </div>
@@ -238,6 +279,8 @@ export default function ScriptEditor() {
                 config={sec}
                 value={local[sec.key]}
                 onChange={handleChange}
+                objective={local.objective}
+                idea={local.idea}
                 defaultOpen={i === 0}   // only hook open by default
               />
             ))}
