@@ -161,8 +161,9 @@ export default function ScriptEditor() {
   const updateScript   = useScriptStore((s) => s.updateScript)
   const deleteScript   = useScriptStore((s) => s.deleteScript)
   const groups         = useScriptStore((s) => s.groups)
-  const activeScriptId = useUIStore((s) => s.activeScriptId)
+  const activeScriptId  = useUIStore((s) => s.activeScriptId)
   const setActiveScript = useUIStore((s) => s.setActiveScript)
+  const liveContext     = useUIStore((s) => s.liveContext)
 
   // Read script fresh on each render to get the latest from the store
   const script = useScriptStore(
@@ -282,8 +283,8 @@ export default function ScriptEditor() {
                 config={sec}
                 value={local[sec.key]}
                 onChange={handleChange}
-                objective={script?.objective}
-                idea={script?.idea}
+                objective={liveContext.objective}
+                idea={liveContext.idea}
                 defaultOpen={i === 0}   // only hook open by default
               />
             ))}
