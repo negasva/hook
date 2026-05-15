@@ -1,16 +1,19 @@
 import { useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, authReady } from '../lib/supabase'
 import { useScriptStore } from '../store/useScriptStore'
 
 export function useDataInit() {
   const hydrate = useScriptStore((s) => s._hydrate)
 
   useEffect(() => {
-    if (!supabase) return // no Supabase config → localStorage-only mode
+    if (!supabase) return // localStorage-only mode
 
     const init = async () => {
-      // Anonymous auth — creates a persistent user per device/browser
-      await supabase.auth.signInAnonymously()
+      const user = await authReady
+      if (!user) {
+        console.warn('[ScriptLab] No user after auth — check Supabase anonymous auth is enabled')
+        return
+      }
 
       const [{ data: groupRows, error: ge }, { data: scriptRows, error: se }] =
         await Promise.all([
@@ -18,10 +21,10 @@ export function useDataInit() {
           supabase.from('scripts').select('*').order('created_at'),
         ])
 
-      if (ge || se) {
-        console.error('[ScriptLab] Supabase load error', ge ?? se)
-        return
-      }
+      if (ge) { console.error('[ScriptLab] load groups error:', ge.message); return }
+      if (se) { console.error('[ScriptLab] load scripts error:', se.message); return }
+
+      console.log(`[ScriptLab] loaded ${groupRows?.length ?? 0} groups, ${scriptRows?.length ?? 0} scripts`)
 
       const groups = (groupRows ?? []).map((r) => ({
         id:       r.id,
@@ -50,6 +53,6 @@ export function useDataInit() {
       hydrate({ groups, scripts })
     }
 
-    init().catch(console.error)
+    init().catch((e) => console.error('[ScriptLab] init error:', e.message))
   }, [hydrate])
 }
