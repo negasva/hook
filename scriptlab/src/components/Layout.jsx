@@ -7,10 +7,12 @@ import Icon from './Icon'
 import { useScriptStore } from '../store/useScriptStore'
 import { useUIStore } from '../store/useUIStore'
 import { useDialog } from '../hooks/useDialog'
+import { useDataInit } from '../hooks/useDataInit'
 
 /* ─── Layout ──────────────────────────────────────────────────────────────── */
 
 export default function Layout() {
+  useDataInit()
   return (
     <div className="app-shell">
       <Header />

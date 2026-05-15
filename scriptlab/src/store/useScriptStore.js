@@ -1,198 +1,155 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { newId } from '../utils/id'
 import { now } from '../utils/date'
+import { supabase } from '../lib/supabase'
 
-/* ─── Seed data ────────────────────────────────────────────────────────────── */
+/* ─── Supabase sync helpers ────────────────────────────────────────────────── */
 
-const SEED_GROUPS = [
-  {
-    id: 'g-marketing',
-    name: 'Marketing',
-    parentId: null,
-    color: '#f59e0b',
-    icon: 'megaphone',
-    order: 0,
-  },
-  {
-    id: 'g-education',
-    name: 'Educación',
-    parentId: null,
-    color: '#6366f1',
-    icon: 'book',
-    order: 1,
-  },
-  {
-    id: 'g-social-ads',
-    name: 'Social Ads',
-    parentId: 'g-marketing',
-    color: '#ec4899',
-    icon: 'sparkles',
-    order: 0,
-  },
-]
+// Convert store shapes → DB row shapes
+const groupRow = (g) => ({
+  id: g.id, name: g.name, parent_id: g.parentId ?? null,
+  color: g.color, icon: g.icon, order: g.order,
+})
 
-const SEED_SCRIPTS = [
-  {
-    id: 's-001',
-    title: 'Lanzamiento producto — awareness',
-    hook: '¿Qué pasaría si pudieras duplicar tus ventas sin gastar más en publicidad?',
-    rehook: 'Lo que te voy a mostrar cambió por completo cómo vendo online.',
-    content:
-      'El problema no es tu producto. Es cómo lo estás presentando. La mayoría de marcas hablan de características. Tú tienes que hablar de transformación. Muestra el antes y el después. Hazlo específico, hazlo visual, hazlo real.',
-    finale:
-      'Con este método pasé de 20 a 80 ventas mensuales en 60 días sin aumentar el presupuesto de ads.',
-    cta: 'Enlace en bio para ver el caso completo.',
-    objective: 'Vender producto, Generar leads',
-    idea: 'Mostrar la transformación de ventas usando el método de presentación enfocado en beneficios.',
-    groupId: 'g-social-ads',
-    createdAt: '2025-01-10T09:00:00.000Z',
-    updatedAt: '2025-01-10T09:00:00.000Z',
-  },
-  {
-    id: 's-002',
-    title: 'Tutorial — Framework de contenido 3x3',
-    hook: 'Tres preguntas. Tres respuestas. Noventa días de contenido listo.',
-    rehook: 'Esto es lo que usan los creadores con más de 100k seguidores para no quedarse sin ideas.',
-    content:
-      'Primero: define tu cliente ideal en una frase. Segundo: lista sus tres mayores dolores. Tercero: para cada dolor, crea tres formatos distintos — un carrusel, un video corto y un hilo. Ya tienes 9 piezas. Repite el ciclo cada mes.',
-    finale:
-      'El contenido consistente no requiere creatividad infinita. Requiere un sistema.',
-    cta: 'Guarda este video y úsalo como referencia cada lunes.',
-    objective: 'Educar',
-    idea: 'Framework 3x3 para generar 90 días de contenido con solo 3 preguntas y 3 formatos.',
-    groupId: 'g-education',
-    createdAt: '2025-01-14T11:30:00.000Z',
-    updatedAt: '2025-01-15T08:20:00.000Z',
-  },
-  {
-    id: 's-003',
-    title: 'Storytelling — El error que me costó 10k',
-    hook: 'Perdí diez mil dólares por ignorar este consejo. No lo ignoré una vez. Lo ignoré cinco veces.',
-    rehook: 'Hoy te cuento exactamente qué salió mal para que no cometas el mismo error.',
-    content:
-      'Año 2022. Tenía un producto validado, una audiencia creciente y cero sistema de seguimiento. Cada venta era manual. Cada cliente, un esfuerzo individual. Cuando intenté escalar, el modelo colapsó. No era falta de demanda. Era falta de infraestructura.',
-    finale:
-      'La lección: valida rápido, pero construye el sistema antes de escalar. En ese orden.',
-    cta: 'Comenta "sistema" y te mando el checklist que uso hoy.',
-    objective: 'Ganar followers, Visibilidad de marca',
-    idea: 'Historia personal de pérdida de 10k por no tener infraestructura al escalar.',
-    groupId: 'g-marketing',
-    createdAt: '2025-01-18T16:00:00.000Z',
-    updatedAt: '2025-01-18T16:00:00.000Z',
-  },
-]
+const scriptRow = (s) => ({
+  id: s.id, title: s.title, group_id: s.groupId ?? null,
+  hook: s.hook, rehook: s.rehook, content: s.content,
+  finale: s.finale, cta: s.cta, objective: s.objective,
+  idea: s.idea, created_at: s.createdAt, updated_at: s.updatedAt,
+})
+
+// Fire-and-forget — local state is source of truth, Supabase is synced after
+const up = (table, data) => {
+  supabase?.from(table).upsert(data).then()
+}
+const del = (table, id) => {
+  supabase?.from(table).delete().eq('id', id).then()
+}
 
 /* ─── Store ────────────────────────────────────────────────────────────────── */
 
-export const useScriptStore = create((set, get) => ({
-  groups: SEED_GROUPS,
-  scripts: SEED_SCRIPTS,
+export const useScriptStore = create(
+  persist(
+    (set, get) => ({
+      groups:  [],
+      scripts: [],
 
-  /* ── Group CRUD ────────────────────────────────────────────────────────── */
+      // Called by useDataInit to overwrite local data with Supabase data
+      _hydrate: ({ groups, scripts }) => set({ groups, scripts }),
 
-  addGroup: (fields) => {
-    const { groups } = get()
-    const siblingsCount = groups.filter(
-      (g) => g.parentId === (fields.parentId ?? null),
-    ).length
+      /* ── Group CRUD ──────────────────────────────────────────────────────── */
 
-    const group = {
-      id: newId(),
-      name: fields.name ?? 'Nuevo grupo',
-      parentId: fields.parentId ?? null,
-      color: fields.color ?? '#6b7280',
-      icon: fields.icon ?? 'folder',
-      order: fields.order ?? siblingsCount,
-    }
+      addGroup: (fields) => {
+        const { groups } = get()
+        const siblingsCount = groups.filter(
+          (g) => g.parentId === (fields.parentId ?? null),
+        ).length
 
-    set((s) => ({ groups: [...s.groups, group] }))
-    return group
-  },
+        const group = {
+          id:       newId(),
+          name:     fields.name     ?? 'Nuevo grupo',
+          parentId: fields.parentId ?? null,
+          color:    fields.color    ?? '#6b7280',
+          icon:     fields.icon     ?? 'folder',
+          order:    fields.order    ?? siblingsCount,
+        }
 
-  updateGroup: (id, patch) => {
-    set((s) => ({
-      groups: s.groups.map((g) => (g.id === id ? { ...g, ...patch } : g)),
-    }))
-  },
+        set((s) => ({ groups: [...s.groups, group] }))
+        up('groups', groupRow(group))
+        return group
+      },
 
-  deleteGroup: (id) => {
-    const { groups, scripts } = get()
+      updateGroup: (id, patch) => {
+        set((s) => ({
+          groups: s.groups.map((g) => (g.id === id ? { ...g, ...patch } : g)),
+        }))
+        const updated = get().groups.find((g) => g.id === id)
+        if (updated) up('groups', groupRow(updated))
+      },
 
-    // collect ids of this group and all descendant groups
-    const collectIds = (rootId) => {
-      const ids = [rootId]
-      groups
-        .filter((g) => g.parentId === rootId)
-        .forEach((child) => ids.push(...collectIds(child.id)))
-      return ids
-    }
-    const idsToDelete = new Set(collectIds(id))
+      deleteGroup: (id) => {
+        const { groups, scripts } = get()
 
-    set({
-      groups: groups.filter((g) => !idsToDelete.has(g.id)),
-      scripts: scripts.map((s) =>
-        idsToDelete.has(s.groupId) ? { ...s, groupId: null } : s,
-      ),
-    })
-  },
+        const collectIds = (rootId) => {
+          const ids = [rootId]
+          groups
+            .filter((g) => g.parentId === rootId)
+            .forEach((child) => ids.push(...collectIds(child.id)))
+          return ids
+        }
+        const idsToDelete = new Set(collectIds(id))
 
-  reorderGroup: (id, newOrder) => {
-    set((s) => ({
-      groups: s.groups.map((g) => (g.id === id ? { ...g, order: newOrder } : g)),
-    }))
-  },
+        // Scripts that lose their group → update groupId to null in Supabase
+        scripts
+          .filter((s) => idsToDelete.has(s.groupId))
+          .forEach((s) => up('scripts', scriptRow({ ...s, groupId: null })))
 
-  /* ── Script CRUD ───────────────────────────────────────────────────────── */
+        set({
+          groups:  groups.filter((g) => !idsToDelete.has(g.id)),
+          scripts: scripts.map((s) =>
+            idsToDelete.has(s.groupId) ? { ...s, groupId: null } : s,
+          ),
+        })
 
-  addScript: (fields = {}) => {
-    const ts = now()
-    const script = {
-      id: newId(),
-      title: fields.title ?? 'Sin título',
-      hook: fields.hook ?? '',
-      rehook: fields.rehook ?? '',
-      content: fields.content ?? '',
-      finale: fields.finale ?? '',
-      cta: fields.cta ?? '',
-      objective: fields.objective ?? '',
-      idea: fields.idea ?? '',
-      groupId: fields.groupId ?? null,
-      createdAt: ts,
-      updatedAt: ts,
-    }
+        idsToDelete.forEach((gid) => del('groups', gid))
+      },
 
-    set((s) => ({ scripts: [...s.scripts, script] }))
-    return script
-  },
+      reorderGroup: (id, newOrder) => {
+        set((s) => ({
+          groups: s.groups.map((g) => (g.id === id ? { ...g, order: newOrder } : g)),
+        }))
+        const updated = get().groups.find((g) => g.id === id)
+        if (updated) up('groups', groupRow(updated))
+      },
 
-  updateScript: (id, patch) => {
-    set((s) => ({
-      scripts: s.scripts.map((sc) =>
-        sc.id === id ? { ...sc, ...patch, updatedAt: now() } : sc,
-      ),
-    }))
-  },
+      /* ── Script CRUD ─────────────────────────────────────────────────────── */
 
-  deleteScript: (id) => {
-    set((s) => ({ scripts: s.scripts.filter((sc) => sc.id !== id) }))
-  },
+      addScript: (fields = {}) => {
+        const ts = now()
+        const script = {
+          id:        newId(),
+          title:     fields.title     ?? 'Sin título',
+          hook:      fields.hook      ?? '',
+          rehook:    fields.rehook    ?? '',
+          content:   fields.content   ?? '',
+          finale:    fields.finale    ?? '',
+          cta:       fields.cta       ?? '',
+          objective: fields.objective ?? '',
+          idea:      fields.idea      ?? '',
+          groupId:   fields.groupId   ?? null,
+          createdAt: ts,
+          updatedAt: ts,
+        }
 
-  /* ── Selectors ─────────────────────────────────────────────────────────── */
+        set((s) => ({ scripts: [...s.scripts, script] }))
+        up('scripts', scriptRow(script))
+        return script
+      },
 
-  getScript: (id) => get().scripts.find((s) => s.id === id) ?? null,
+      updateScript: (id, patch) => {
+        set((s) => ({
+          scripts: s.scripts.map((sc) =>
+            sc.id === id ? { ...sc, ...patch, updatedAt: now() } : sc,
+          ),
+        }))
+        const updated = get().scripts.find((s) => s.id === id)
+        if (updated) up('scripts', scriptRow(updated))
+      },
 
-  getGroup: (id) => get().groups.find((g) => g.id === id) ?? null,
+      deleteScript: (id) => {
+        set((s) => ({ scripts: s.scripts.filter((sc) => sc.id !== id) }))
+        del('scripts', id)
+      },
 
-  getScriptsByGroup: (groupId) =>
-    get().scripts.filter((s) => s.groupId === groupId),
+      /* ── Selectors ───────────────────────────────────────────────────────── */
 
-  getRootGroups: () =>
-    get()
-      .groups.filter((g) => g.parentId === null)
-      .sort((a, b) => a.order - b.order),
-
-  getChildGroups: (parentId) =>
-    get()
-      .groups.filter((g) => g.parentId === parentId)
-      .sort((a, b) => a.order - b.order),
-}))
+      getScript:        (id)      => get().scripts.find((s) => s.id === id) ?? null,
+      getGroup:         (id)      => get().groups.find((g) => g.id === id) ?? null,
+      getScriptsByGroup:(groupId) => get().scripts.filter((s) => s.groupId === groupId),
+      getRootGroups:    ()        => get().groups.filter((g) => g.parentId === null).sort((a, b) => a.order - b.order),
+      getChildGroups:   (pid)     => get().groups.filter((g) => g.parentId === pid).sort((a, b) => a.order - b.order),
+    }),
+    { name: 'scriptlab-data' }, // localStorage key
+  ),
+)
