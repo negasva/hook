@@ -48,6 +48,21 @@ export const useScriptStore = create(
       // Called by useDataInit to overwrite local data with Supabase data
       _hydrate: ({ groups, scripts }) => set({ groups, scripts }),
 
+      // Push all local data up to Supabase (used on first sync for a new user)
+      _pushToSupabase: async () => {
+        if (!supabase) return
+        await authReady
+        const { groups, scripts } = get()
+        await Promise.all([
+          ...groups.map((g) => supabase.from('groups').upsert(groupRow(g)).then(({ error }) => {
+            if (error) console.error('[ScriptLab] push group:', error.message)
+          })),
+          ...scripts.map((s) => supabase.from('scripts').upsert(scriptRow(s)).then(({ error }) => {
+            if (error) console.error('[ScriptLab] push script:', error.message)
+          })),
+        ])
+      },
+
       /* ── Group CRUD ──────────────────────────────────────────────────────── */
 
       addGroup: (fields) => {

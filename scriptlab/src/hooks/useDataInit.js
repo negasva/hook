@@ -3,7 +3,8 @@ import { supabase, authReady } from '../lib/supabase'
 import { useScriptStore } from '../store/useScriptStore'
 
 export function useDataInit() {
-  const hydrate = useScriptStore((s) => s._hydrate)
+  const hydrate        = useScriptStore((s) => s._hydrate)
+  const pushToSupabase = useScriptStore((s) => s._pushToSupabase)
 
   useEffect(() => {
     if (!supabase) return // localStorage-only mode
@@ -24,9 +25,17 @@ export function useDataInit() {
       if (ge) { console.error('[ScriptLab] load groups error:', ge.message); return }
       if (se) { console.error('[ScriptLab] load scripts error:', se.message); return }
 
-      console.log(`[ScriptLab] loaded ${groupRows?.length ?? 0} groups, ${scriptRows?.length ?? 0} scripts`)
+      const hasRemote = (groupRows?.length ?? 0) > 0 || (scriptRows?.length ?? 0) > 0
 
-      const groups = (groupRows ?? []).map((r) => ({
+      if (!hasRemote) {
+        // Supabase empty for this user → push local data up instead of wiping it
+        await pushToSupabase()
+        return
+      }
+
+      console.log(`[ScriptLab] loaded ${groupRows.length} groups, ${scriptRows.length} scripts`)
+
+      const groups = groupRows.map((r) => ({
         id:       r.id,
         name:     r.name,
         parentId: r.parent_id,
@@ -35,7 +44,7 @@ export function useDataInit() {
         order:    r.order,
       }))
 
-      const scripts = (scriptRows ?? []).map((r) => ({
+      const scripts = scriptRows.map((r) => ({
         id:        r.id,
         title:     r.title,
         groupId:   r.group_id,
@@ -54,5 +63,5 @@ export function useDataInit() {
     }
 
     init().catch((e) => console.error('[ScriptLab] init error:', e.message))
-  }, [hydrate])
+  }, [hydrate, pushToSupabase])
 }
