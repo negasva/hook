@@ -6,14 +6,27 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('')
   const [loading,  setLoading]  = useState(false)
   const [error,    setError]    = useState(null)
+  const [isSignUp, setIsSignUp] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
-    const { error: err } = await supabase.auth.signInWithPassword({ email, password })
-    if (err) setError(err.message)
+    if (isSignUp) {
+      const { error: err } = await supabase.auth.signUp({ email, password })
+      if (err) {
+        setError(err.message)
+      } else {
+        setError(null)
+        setIsSignUp(false)
+        setEmail('')
+        setPassword('')
+      }
+    } else {
+      const { error: err } = await supabase.auth.signInWithPassword({ email, password })
+      if (err) setError(err.message)
+    }
     setLoading(false)
   }
 
@@ -37,7 +50,7 @@ export default function LoginScreen() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@correo.com"
-              autoComplete="email"
+              autoComplete={isSignUp ? 'off' : 'email'}
               autoCapitalize="none"
               required
             />
@@ -54,7 +67,7 @@ export default function LoginScreen() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              autoComplete="current-password"
+              autoComplete={isSignUp ? 'new-password' : 'current-password'}
               required
             />
           </div>
@@ -68,14 +81,29 @@ export default function LoginScreen() {
             className={`login-btn${loading ? ' is-loading' : ''}`}
             disabled={loading || !email || !password}
           >
-            {loading ? <span className="login-spinner" /> : 'Entrar'}
+            {loading ? <span className="login-spinner" /> : isSignUp ? 'Crear cuenta' : 'Entrar'}
           </button>
         </form>
 
-        <p className="login-hint text-label">
-          La contraseña se guarda en este dispositivo.
-          No volverá a pedírtela aquí.
-        </p>
+        <div className="login-footer">
+          <p className="login-hint text-label">
+            {isSignUp
+              ? 'La contraseña se guardará en este dispositivo.'
+              : 'La contraseña se guarda en este dispositivo. No volverá a pedírtela aquí.'}
+          </p>
+          <button
+            type="button"
+            className="login-toggle"
+            onClick={() => {
+              setIsSignUp(!isSignUp)
+              setError(null)
+              setEmail('')
+              setPassword('')
+            }}
+          >
+            {isSignUp ? '¿Ya tienes cuenta? Entra' : '¿Sin cuenta? Regístrate'}
+          </button>
+        </div>
       </div>
     </div>
   )
