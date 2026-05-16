@@ -76,15 +76,16 @@ function getLengthLabel(value) {
 
 /* ─── Accordion section ──────────────────────────────────────────────────── */
 
-function Section({ config, value, onChange, getContext, getLengthValue, setLengthValue, defaultOpen = true }) {
+function Section({ config, value, onChange, getContext, getLengthValue, setLengthValue, contentBase, onContentBaseChange, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen)
   const count = (value ?? '').length
   const { generate, loading, variants, error, clear } = useAIGenerate()
   const lengthValue = getLengthValue(config.key)
+  const isContent = config.key === 'content'
 
   const handleGenerate = () => {
     const ctx = getContext()
-    generate({ sectionKey: config.key, ...ctx, lengthValue })
+    generate({ sectionKey: config.key, ...ctx, contentBase, lengthValue })
   }
 
   const handleSelect = (variant) => {
@@ -97,6 +98,7 @@ function Section({ config, value, onChange, getContext, getLengthValue, setLengt
   }
 
   const showPanel = loading || variants || error
+  const showContentBaseHint = isContent && !(contentBase ?? '').trim()
 
   return (
     <div className={`ed-section${open ? ' is-open' : ''}`} style={{ '--section-color': config.color }}>
@@ -136,6 +138,18 @@ function Section({ config, value, onChange, getContext, getLengthValue, setLengt
             sectionColor={config.color}
           />
 
+          {isContent && (
+            <div className="ed-content-base">
+              <label className="ed-content-base-label">Base del contenido</label>
+              <AutoTextarea
+                value={contentBase ?? ''}
+                onChange={(e) => onContentBaseChange(e.target.value)}
+                placeholder="Escribe la base de tu contenido… ej: Dame 5 razones por las que el blackwork dura más que otros estilos"
+                sectionColor={config.color}
+              />
+            </div>
+          )}
+
           <div className="ai-trigger-row">
             <button
               className={`ai-btn${loading ? ' is-loading' : ''}`}
@@ -143,15 +157,18 @@ function Section({ config, value, onChange, getContext, getLengthValue, setLengt
               disabled={loading}
               type="button"
               style={{ '--section-color': config.color }}
+              title={showContentBaseHint ? 'Agrega una base para generar contenido más preciso' : undefined}
             >
               {loading
                 ? <span className="ai-btn-spinner" />
                 : <span className="ai-btn-icon">✨</span>}
               Generar con IA
             </button>
-            {config.hint && (
+            {showContentBaseHint ? (
+              <span className="ai-chain-hint">Agrega una base para generar contenido más preciso</span>
+            ) : config.hint ? (
               <span className="ai-chain-hint">{config.hint}</span>
-            )}
+            ) : null}
           </div>
 
           {showPanel && (
@@ -343,6 +360,8 @@ export default function ScriptEditor() {
                 getContext={getContext}
                 getLengthValue={getLengthValue}
                 setLengthValue={setLengthValue}
+                contentBase={local.contentBase}
+                onContentBaseChange={(v) => handleChange('contentBase', v)}
                 defaultOpen={i === 0}
               />
             ))}

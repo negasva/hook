@@ -65,7 +65,12 @@ ${lengthInstruction || ''}`,
   }
 }
 
-function contentPrompt({ objective, idea, hook, rehook, lengthInstruction }) {
+function contentPrompt({ objective, idea, hook, rehook, contentBase, lengthInstruction }) {
+  const trimmedBase = contentBase?.trim()
+  const baseInstruction = trimmedBase
+    ? `El usuario quiere que el contenido trate específicamente esto: ${trimmedBase}. Desarrolla ese contenido siguiendo la línea narrativa del hook: "${hook?.trim() || '(aún no escrito)'}" y el rehook: "${rehook?.trim() || '(aún no escrito)'}". Si el rehook promete una lista, estructura el contenido como esa lista. Si promete una historia, cuéntala. Si promete razones, dálas. Mantén coherencia total con lo prometido en el rehook.`
+    : `Genera el cuerpo del guión que cumpla la promesa que hicieron el hook y rehook. Debe mantener el MISMO tono, ser concreto, aportar valor real y preparar al espectador para el CTA.`
+
   return {
     system: `Eres un experto en contenido viral para redes sociales. Tu trabajo es cumplir la promesa que hicieron el hook y el rehook.
 ${ANTI_AI_RULES}
@@ -85,7 +90,7 @@ El HOOK es:
 El REHOOK es:
 "${rehook?.trim() || '(aún no escrito)'}"
 
-Genera el cuerpo del guión que cumpla la promesa que hicieron el hook y rehook. Debe mantener el MISMO tono, ser concreto, aportar valor real y preparar al espectador para el CTA.
+${baseInstruction}
 Estructura cada variante en 3-5 puntos breves.
 ${lengthInstruction || ''}`,
   }
@@ -123,8 +128,15 @@ const BUILDERS = {
   cta:     ctaPrompt,
 }
 
-function getLengthInstruction(lengthValue) {
+function getLengthInstruction(lengthValue, sectionKey) {
   const value = lengthValue ?? 5
+  if (sectionKey === 'content') {
+    if (value <= 2) return 'El contenido debe tener máximo 25 palabras.'
+    if (value <= 4) return 'El contenido debe tener entre 30 y 60 palabras.'
+    if (value <= 6) return 'El contenido debe tener entre 75 y 120 palabras.'
+    if (value <= 8) return 'El contenido debe tener entre 135 y 195 palabras.'
+    return 'El contenido debe tener entre 210 y 300 palabras.'
+  }
   if (value <= 2) return 'Cada opción debe tener máximo 8 palabras.'
   if (value <= 4) return 'Cada opción debe tener entre 10 y 20 palabras.'
   if (value <= 6) return 'Cada opción debe tener entre 25 y 40 palabras.'
@@ -155,14 +167,14 @@ export function useAIGenerate() {
   const [variants, setVariants] = useState(null)
   const [error,    setError]    = useState(null)
 
-  const generate = useCallback(async ({ sectionKey, objective, idea, hook, rehook, content, lengthValue }) => {
+  const generate = useCallback(async ({ sectionKey, objective, idea, hook, rehook, content, contentBase, lengthValue }) => {
     setLoading(true)
     setVariants(null)
     setError(null)
 
-    const lengthInstruction = getLengthInstruction(lengthValue)
+    const lengthInstruction = getLengthInstruction(lengthValue, sectionKey)
     const builder = BUILDERS[sectionKey] ?? BUILDERS.hook
-    const { system, user } = builder({ objective, idea, hook, rehook, content, lengthInstruction })
+    const { system, user } = builder({ objective, idea, hook, rehook, content, contentBase, lengthInstruction })
 
     try {
       const maxTokens = sectionKey === 'hook' ? 250 : sectionKey === 'content' ? 1000 : 400
