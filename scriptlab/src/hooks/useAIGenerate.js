@@ -1,112 +1,150 @@
 import { useState, useCallback } from 'react'
 import { callAI } from '../lib/callAI'
 
-/* ─── Anti-IA style rules (shared across all prompts) ─────────────────────── */
-
 const ANTI_AI_RULES = `
-REGLAS DE ESTILO OBLIGATORIAS — LEE ESTO ANTES DE GENERAR:
+REGLAS DE ESTILO OBLIGATORIAS:
 
-PALABRAS PROHIBIDAS (si las usas, el guion falla):
+PALABRAS PROHIBIDAS (si las usas, falla):
 - Adjetivos: fascinante, cautivador, intrincado, transformador, vital, crucial, revolucionario, poderoso, impactante, valioso, increíble, extraordinario
-- Sustantivos: paisaje (ej: "el paisaje digital"), reino, secretos, sinergia, potencial, estrategia, viaje, trayectoria
+- Sustantivos: paisaje (metafórico), reino, secretos, sinergia, potencial, estrategia, viaje, trayectoria
 - Verbos: desbloquear, explorar, sumergirnos, descubrir, elevar, optimizar, maximizar, potenciar
 
 ESTRUCTURAS PROHIBIDAS:
-- No saludes: cero "¡Hola!", cero "Bienvenidos", cero "En este video..."
-- No enumeres rígido: nada de "Punto número uno", "En primer lugar", "En segundo lugar"
-- No hagas conclusión filosófica: nada de "En última instancia...", "Al final del día..."
-- No resumas al final. Corta de golpe o con pregunta real.
+- Cero saludos ("Hola", "Bienvenidos", "En este video")
+- Cero enumeración rígida ("Punto uno", "En primer lugar")
+- Cero conclusiones filosóficas ("En última instancia", "Al final del día")
 
-CÓMO ESCRIBIR (obligatorio):
-- Español neutro coloquial — como si hablaras con un amigo, no como doblaje de película de los 90
-- Frases cortas. Muy cortas. A veces incompletas.
-- Mete dudas reales: "No me acuerdo exactamente, pero era algo así...", "Creo que fue...", "No sé si esto aplica para todos, pero..."
-- Opiniones concretas y sesgadas: di "esto es una basura" o "esto me cambió la vida" — no seas neutral
-- Rompe la gramática si suena más humano. Una coma de más, una frase sin verbo — bien.
-- El gancho empieza en el segundo 0. Sin contexto previo. Sin calentamiento.`
+CÓMO ESCRIBIR:
+- Español neutro coloquial — como hablar con un amigo
+- Frases cortas, a veces incompletas
+- Opiniones concretas y sesgadas, no neutralidad
+- Rompe la gramática si suena más humano`
 
-/* ─── Section prompts ─────────────────────────────────────────────────────── */
+/* ─── Section prompts (cada uno encadena al anterior) ─────────────────────── */
 
-const SYSTEM_PROMPTS = {
-  hook: `Eres un creador de contenido con 2M de seguidores en TikTok. Escribes la primera línea que detiene el scroll en los primeros 2 segundos.
-El HOOK es UNA SOLA frase de apertura — lo que se dice en los primeros 2-3 segundos del video. No es un párrafo, no es un resumen, no es una historia. Es una sola línea de impacto.
-Genera exactamente 3 variantes de HOOK. Cada una debe ser:
-- Una sola oración. Máximo 20 palabras.
-- Que genere tensión, contradicción, curiosidad o provocación inmediata
-- Sin contexto previo, sin calentamiento, sin "hola", sin presentación
-Formato ESTRICTO — SOLO esto, nada más:
-1. [una sola frase]
-2. [una sola frase]
-3. [una sola frase]
-${ANTI_AI_RULES}`,
+function hookPrompt({ objective, idea }) {
+  return {
+    system: `Eres un experto en contenido viral para redes sociales.
+${ANTI_AI_RULES}
 
-  rehook: `Eres un creador de contenido con 2M de seguidores en TikTok. Sabes cómo mantener a alguien mirando después del hook.
-Genera exactamente 3 variantes de REHOOK. Aparece justo después del hook — es la segunda razón para quedarse, más específica y personal que el hook.
-Formato: SOLO 3 variantes numeradas:
+Formato OBLIGATORIO — devuelve SOLO esto:
+1. [hook]
+2. [hook]
+3. [hook]`,
+    user: `Con base en este objetivo: ${objective?.trim() || 'No especificado'}
+Y esta idea: ${idea?.trim() || 'No especificada'}
+
+Genera 3 opciones de HOOK (primeros 1-3 segundos del video) que detengan el scroll, generen curiosidad inmediata y hablen directamente al dolor o deseo del espectador.
+Cada hook MÁXIMO 15 palabras. Una sola frase.`,
+  }
+}
+
+function rehookPrompt({ objective, idea, hook }) {
+  return {
+    system: `Eres un experto en contenido viral para redes sociales. Mantienes la coherencia narrativa entre hook y rehook.
+${ANTI_AI_RULES}
+
+Formato OBLIGATORIO — devuelve SOLO esto:
 1. [rehook]
 2. [rehook]
-3. [rehook]
-Máximo 2 oraciones. Puede empezar a la mitad de una idea.
-${ANTI_AI_RULES}`,
+3. [rehook]`,
+    user: `Objetivo del video: ${objective?.trim() || 'No especificado'}
+Idea del video: ${idea?.trim() || 'No especificada'}
 
-  content: `Eres un creador de contenido con 2M de seguidores en TikTok. Tu contenido siempre tiene datos concretos, no generalidades.
-Genera exactamente 3 variantes de CONTENIDO PRINCIPAL del video. Cada variante debe tener sustancia real: números, pasos concretos, historia personal o contraejemplo. Nada vago.
-Formato: SOLO 3 variantes numeradas:
-1. [contenido]
-2. [contenido]
-3. [contenido]
-Máximo 5 oraciones por variante. Usa saltos de línea dentro si ayuda al ritmo.
-${ANTI_AI_RULES}`,
+El HOOK de este video es:
+"${hook?.trim() || '(aún no escrito)'}"
 
-  finale: `Eres un creador de contenido con 2M de seguidores en TikTok. Tus cierres no son moralejas — son remates que duelen o sorprenden.
-Genera exactamente 3 variantes de CIERRE del video. El cierre cierra el loop emocional del hook sin resumir lo dicho. Puede ser abrupto, puede ser una pregunta incómoda, puede ser un giro.
-Formato: SOLO 3 variantes numeradas:
-1. [cierre]
-2. [cierre]
-3. [cierre]
-1-2 oraciones máximo. Cuanto más corto, más golpea.
-${ANTI_AI_RULES}`,
+Continúa la narrativa con un REHOOK que profundice la promesa del hook, mantenga EXACTAMENTE el mismo tono y voz, y evite que el espectador se vaya.
+Genera 3 opciones de máximo 20 palabras cada una.`,
+  }
+}
 
-  cta: `Eres un creador de contenido con 2M de seguidores en TikTok. Tus CTAs suenan como peticiones de un amigo, no como publicidad.
-Genera exactamente 3 variantes de CTA (llamada a la acción). Cada CTA pide UNA sola cosa, de forma directa y sin justificación larga.
-Formato: SOLO 3 variantes numeradas:
+function contentPrompt({ objective, idea, hook, rehook }) {
+  return {
+    system: `Eres un experto en contenido viral para redes sociales. Tu trabajo es cumplir la promesa que hicieron el hook y el rehook.
+${ANTI_AI_RULES}
+
+Formato OBLIGATORIO — devuelve SOLO esto:
+1. [contenido en 3-5 puntos breves]
+2. [contenido en 3-5 puntos breves]
+3. [contenido en 3-5 puntos breves]`,
+    user: `Objetivo del video: ${objective?.trim() || 'No especificado'}
+Idea del video: ${idea?.trim() || 'No especificada'}
+
+El HOOK es:
+"${hook?.trim() || '(aún no escrito)'}"
+
+El REHOOK es:
+"${rehook?.trim() || '(aún no escrito)'}"
+
+Genera el cuerpo del guión que cumpla la promesa que hicieron el hook y rehook. Debe mantener el MISMO tono, ser concreto, aportar valor real y preparar al espectador para el CTA.
+Estructura cada variante en 3-5 puntos breves.`,
+  }
+}
+
+function ctaPrompt({ objective, idea, hook, rehook, content }) {
+  return {
+    system: `Eres un experto en contenido viral. Tu CTA cierra de forma natural y coherente con TODO el guión anterior.
+${ANTI_AI_RULES}
+
+Formato OBLIGATORIO — devuelve SOLO esto:
 1. [CTA]
 2. [CTA]
-3. [CTA]
-Una sola oración. Sin puntos finales si no suenan naturales.
-${ANTI_AI_RULES}`,
+3. [CTA]`,
+    user: `El objetivo del video es: ${objective?.trim() || 'No especificado'}
+La idea es: ${idea?.trim() || 'No especificada'}
+
+El guión completo es:
+- HOOK: "${hook?.trim() || '(vacío)'}"
+- REHOOK: "${rehook?.trim() || '(vacío)'}"
+- CONTENIDO: "${content?.trim() || '(vacío)'}"
+
+Genera 3 opciones de CTA que cierren de forma natural y coherente con todo lo anterior, y que lleven al espectador a cumplir este objetivo: ${objective?.trim() || 'el objetivo del video'}.
+MÁXIMO 20 palabras cada uno.`,
+  }
+}
+
+const BUILDERS = {
+  hook:    hookPrompt,
+  rehook:  rehookPrompt,
+  content: contentPrompt,
+  cta:     ctaPrompt,
 }
 
 function parseVariants(text) {
   const lines = text.split('\n').map((l) => l.trim()).filter(Boolean)
   const variants = []
+  let current = null
   for (const line of lines) {
     const match = line.match(/^[1-3][.)]\s+(.+)/)
-    if (match) variants.push(match[1].trim())
+    if (match) {
+      if (current !== null) variants.push(current.trim())
+      current = match[1].trim()
+    } else if (current !== null) {
+      current += '\n' + line
+    }
   }
+  if (current !== null) variants.push(current.trim())
   if (variants.length >= 2) return variants.slice(0, 3)
   return text.split(/\n\n+/).map((s) => s.trim()).filter(Boolean).slice(0, 3)
 }
 
 export function useAIGenerate() {
-  const [loading, setLoading]   = useState(false)
+  const [loading,  setLoading]  = useState(false)
   const [variants, setVariants] = useState(null)
-  const [error, setError]       = useState(null)
+  const [error,    setError]    = useState(null)
 
-  const generate = useCallback(async ({ sectionKey, objective, idea }) => {
+  const generate = useCallback(async ({ sectionKey, objective, idea, hook, rehook, content }) => {
     setLoading(true)
     setVariants(null)
     setError(null)
 
-    const system     = SYSTEM_PROMPTS[sectionKey] ?? SYSTEM_PROMPTS.hook
-    const userPrompt = `Objetivo del video: ${objective?.trim() || 'No especificado'}
-Idea del video: ${idea?.trim() || 'No especificada'}
-
-Genera 3 variantes para esta sección. Recuerda: coloquial, directo, imperfecto, humano.`
+    const builder = BUILDERS[sectionKey] ?? BUILDERS.hook
+    const { system, user } = builder({ objective, idea, hook, rehook, content })
 
     try {
-      const maxTokens = sectionKey === 'hook' ? 200 : 800
-      const text   = await callAI({ system, userPrompt, maxTokens })
+      const maxTokens = sectionKey === 'hook' ? 250 : sectionKey === 'content' ? 1000 : 400
+      const text   = await callAI({ system, userPrompt: user, maxTokens })
       const parsed = parseVariants(text)
       setVariants(parsed.length ? parsed : [text])
     } catch (e) {

@@ -1630,7 +1630,17 @@ html, body {
 .ai-trigger-row {
   display: flex;
   align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
   padding: var(--space-2) var(--space-3) var(--space-3);
+}
+
+.ai-chain-hint {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  letter-spacing: var(--tracking-wide);
+  opacity: 0.6;
+  font-style: italic;
 }
 
 .ai-btn {

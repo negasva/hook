@@ -21,24 +21,21 @@ const SECTIONS = [
     label:       'Rehook',
     color:       '#818cf8',
     placeholder: 'Refuerza el gancho. ¿Por qué deben seguir mirando? Una promesa más específica que conecta con lo que viene.',
+    hint:        'Basado en tu hook actual',
   },
   {
     key:         'content',
     label:       'Contenido',
     color:       '#34d399',
     placeholder: 'El valor real. Datos, pasos, historia o argumento principal. Sé concreto — usa números, ejemplos y contraste. Aquí está la sustancia.',
-  },
-  {
-    key:         'finale',
-    label:       'Final',
-    color:       '#f472b6',
-    placeholder: 'El remate. Conclusión que refuerza el mensaje central y cierra el loop emocional abierto en el hook.',
+    hint:        'Basado en hook y rehook',
   },
   {
     key:         'cta',
     label:       'CTA',
     color:       '#2dd4bf',
     placeholder: 'La acción específica que quieres que hagan. Clara, directa, sin ambigüedad. Un solo CTA convierte mejor.',
+    hint:        'Usando todo el guión',
   },
 ]
 
@@ -70,13 +67,14 @@ function AutoTextarea({ value, onChange, placeholder, sectionColor }) {
 
 /* ─── Accordion section ──────────────────────────────────────────────────── */
 
-function Section({ config, value, onChange, objective, idea, defaultOpen = true }) {
+function Section({ config, value, onChange, getContext, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen)
   const count = (value ?? '').length
   const { generate, loading, variants, error, clear } = useAIGenerate()
 
   const handleGenerate = () => {
-    generate({ sectionKey: config.key, objective, idea })
+    const ctx = getContext()
+    generate({ sectionKey: config.key, ...ctx })
   }
 
   const handleSelect = (variant) => {
@@ -123,6 +121,9 @@ function Section({ config, value, onChange, objective, idea, defaultOpen = true 
                 : <span className="ai-btn-icon">✨</span>}
               Generar con IA
             </button>
+            {config.hint && (
+              <span className="ai-chain-hint">{config.hint}</span>
+            )}
           </div>
 
           {showPanel && (
@@ -174,6 +175,7 @@ export default function ScriptEditor() {
   const [saveState, setSaveState] = useState('idle')
   const pendingPatch  = useRef({})
   const savedTimer    = useRef(null)
+  const localRef      = useRef(null)
 
   // Flush pending changes to store
   const flush = useCallback(() => {
@@ -191,7 +193,9 @@ export default function ScriptEditor() {
   useEffect(() => {
     cancelFlush()
     if (script) {
-      setLocal({ ...script })
+      const next = { ...script }
+      setLocal(next)
+      localRef.current = next
       pendingPatch.current = {}
       setSaveState('idle')
     }
@@ -200,13 +204,28 @@ export default function ScriptEditor() {
 
   const handleChange = useCallback(
     (field, value) => {
-      setLocal((prev) => (prev ? { ...prev, [field]: value } : prev))
+      setLocal((prev) => {
+        const next = prev ? { ...prev, [field]: value } : prev
+        localRef.current = next
+        return next
+      })
       pendingPatch.current[field] = value
       setSaveState('saving')
       debouncedFlush()
     },
     [debouncedFlush],
   )
+
+  const getContext = useCallback(() => {
+    const l = localRef.current ?? local
+    return {
+      objective: liveContext.objective,
+      idea:      liveContext.idea,
+      hook:      l?.hook    ?? '',
+      rehook:    l?.rehook  ?? '',
+      content:   l?.content ?? '',
+    }
+  }, [local, liveContext])
 
   const handleBack = () => {
     flush()           // save immediately on leave
@@ -283,9 +302,8 @@ export default function ScriptEditor() {
                 config={sec}
                 value={local[sec.key]}
                 onChange={handleChange}
-                objective={liveContext.objective}
-                idea={liveContext.idea}
-                defaultOpen={i === 0}   // only hook open by default
+                getContext={getContext}
+                defaultOpen={i === 0}
               />
             ))}
           </div>
