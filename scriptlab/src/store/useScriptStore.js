@@ -16,6 +16,8 @@ const scriptRow = (s, userId) => ({
   hook: s.hook, rehook: s.rehook, content: s.content,
   cta: s.cta, objective: s.objective,
   idea: s.idea, created_at: s.createdAt, updated_at: s.updatedAt,
+  hook_length: s.hookLength ?? 5, rehook_length: s.rehookLength ?? 5,
+  content_length: s.contentLength ?? 5, cta_length: s.ctaLength ?? 5,
 })
 
 // Waits for auth before writing — includes user_id so RLS is satisfied
@@ -144,6 +146,10 @@ export const useScriptStore = create(
           objective: fields.objective ?? '',
           idea:      fields.idea      ?? '',
           groupId:   fields.groupId   ?? null,
+          hookLength:    fields.hookLength    ?? 5,
+          rehookLength:  fields.rehookLength  ?? 5,
+          contentLength: fields.contentLength ?? 5,
+          ctaLength:     fields.ctaLength     ?? 5,
           createdAt: ts,
           updatedAt: ts,
         }

@@ -3,9 +3,9 @@ import Icon from './Icon'
 export default function AIVariants({ variants, loading, error, sectionColor, onSelect, onRegenerate, onClose }) {
   return (
     <div className="ai-panel" style={{ '--section-color': sectionColor }}>
-      {loading && (
+      {loading && !variants && (
         <div className="ai-shimmer">
-          {[0, 1, 2].map((i) => (
+          {[0, 1, 2, 3, 4].map((i) => (
             <div key={i} className="ai-shimmer-row" style={{ '--row': i }}>
               <div className="ai-shimmer-bone ai-shimmer-num-bone" />
               <div className="ai-shimmer-lines">
@@ -24,27 +24,42 @@ export default function AIVariants({ variants, loading, error, sectionColor, onS
         </div>
       )}
 
-      {variants && !loading && (
+      {variants && (
         <>
-          <div className="ai-variants">
+          <div className={`ai-variants${loading ? ' is-regenerating' : ''}`}>
             {variants.map((v, i) => (
               <button
                 key={i}
                 className="ai-variant"
                 onClick={() => onSelect(v)}
+                disabled={loading}
                 type="button"
               >
                 <span className="ai-variant-num">{i + 1}</span>
                 <span className="ai-variant-text">{v}</span>
               </button>
             ))}
+            {loading && (
+              <div className="ai-regenerating-overlay">
+                <span className="ai-regen-spinner" />
+              </div>
+            )}
           </div>
           <div className="ai-panel-footer">
-            <button className="ai-regen-btn" onClick={onRegenerate} type="button">
-              <Icon name="sparkles" size={11} />
-              Regenerar
+            <button className={`ai-regen-btn${loading ? ' is-loading' : ''}`} onClick={onRegenerate} disabled={loading} type="button">
+              {loading ? (
+                <>
+                  <span className="ai-btn-spinner" />
+                  Regenerando...
+                </>
+              ) : (
+                <>
+                  <Icon name="sparkles" size={11} />
+                  Regenerar
+                </>
+              )}
             </button>
-            <button className="ai-close-btn" onClick={onClose} type="button" title="Cerrar">
+            <button className="ai-close-btn" onClick={onClose} disabled={loading} type="button" title="Cerrar">
               <Icon name="x" size={11} />
             </button>
           </div>
