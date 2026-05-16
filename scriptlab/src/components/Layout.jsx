@@ -13,17 +13,57 @@ import { useDataInit } from '../hooks/useDataInit'
 
 export default function Layout() {
   useDataInit()
+
+  const activeScriptId = useUIStore((s) => s.activeScriptId)
+  const mobilePanel    = useUIStore((s) => s.mobilePanel)
+  const setMobilePanel = useUIStore((s) => s.setMobilePanel)
+
+  // Auto-switch to editor when a script is selected on mobile
+  useEffect(() => {
+    if (!activeScriptId) return
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      setMobilePanel('editor')
+    }
+  }, [activeScriptId, setMobilePanel])
+
   return (
     <div className="app-shell">
       <Header />
-      <div className="app-body">
+      <div className="app-body" data-mobile-panel={mobilePanel}>
         <Sidebar />
         <WorkArea />
         <RightPanel />
       </div>
       <StatusBar />
+      <MobileNav panel={mobilePanel} setPanel={setMobilePanel} />
       <Dialog />
     </div>
+  )
+}
+
+/* ─── Mobile bottom nav ───────────────────────────────────────────────────── */
+
+function MobileNav({ panel, setPanel }) {
+  const tabs = [
+    { id: 'sidebar', icon: 'list',      label: 'Guiones'  },
+    { id: 'editor',  icon: 'script',    label: 'Editor'   },
+    { id: 'context', icon: 'target',    label: 'Contexto' },
+  ]
+  return (
+    <nav className="mobile-nav" role="tablist">
+      {tabs.map((t) => (
+        <button
+          key={t.id}
+          role="tab"
+          aria-selected={panel === t.id}
+          className={`mn-tab${panel === t.id ? ' is-active' : ''}`}
+          onClick={() => setPanel(t.id)}
+        >
+          <Icon name={t.icon} size={20} sw={1.5} />
+          <span className="mn-label">{t.label}</span>
+        </button>
+      ))}
+    </nav>
   )
 }
 
