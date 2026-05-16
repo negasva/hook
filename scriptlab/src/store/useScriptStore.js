@@ -14,7 +14,7 @@ const groupRow = (g, userId) => ({
 const scriptRow = (s, userId) => ({
   id: s.id, user_id: userId, title: s.title, group_id: s.groupId ?? null,
   hook: s.hook, rehook: s.rehook, content: s.content,
-  finale: s.finale, cta: s.cta, objective: s.objective,
+  cta: s.cta, objective: s.objective,
   idea: s.idea, created_at: s.createdAt, updated_at: s.updatedAt,
 })
 
@@ -140,7 +140,6 @@ export const useScriptStore = create(
           hook:      fields.hook      ?? '',
           rehook:    fields.rehook    ?? '',
           content:   fields.content   ?? '',
-          finale:    fields.finale    ?? '',
           cta:       fields.cta       ?? '',
           objective: fields.objective ?? '',
           idea:      fields.idea      ?? '',

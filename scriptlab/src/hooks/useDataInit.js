@@ -51,7 +51,6 @@ export function useDataInit() {
         hook:      r.hook,
         rehook:    r.rehook,
         content:   r.content,
-        finale:    r.finale,
         cta:       r.cta,
         objective: r.objective,
         idea:      r.idea,
