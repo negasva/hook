@@ -65,21 +65,35 @@ function AutoTextarea({ value, onChange, placeholder, sectionColor }) {
   )
 }
 
+/* ─── Length label helper ──────────────────────────────────────────────── */
+
+function getLengthLabel(value) {
+  if (value <= 3) return 'Muy corto'
+  if (value <= 6) return 'Medio'
+  if (value <= 9) return 'Largo'
+  return 'Muy largo'
+}
+
 /* ─── Accordion section ──────────────────────────────────────────────────── */
 
-function Section({ config, value, onChange, getContext, defaultOpen = true }) {
+function Section({ config, value, onChange, getContext, getLengthValue, setLengthValue, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen)
   const count = (value ?? '').length
   const { generate, loading, variants, error, clear } = useAIGenerate()
+  const lengthValue = getLengthValue(config.key)
 
   const handleGenerate = () => {
     const ctx = getContext()
-    generate({ sectionKey: config.key, ...ctx })
+    generate({ sectionKey: config.key, ...ctx, lengthValue })
   }
 
   const handleSelect = (variant) => {
     onChange(config.key, variant)
     clear()
+  }
+
+  const handleLengthChange = (newValue) => {
+    setLengthValue(config.key, newValue)
   }
 
   const showPanel = loading || variants || error
@@ -101,6 +115,20 @@ function Section({ config, value, onChange, getContext, defaultOpen = true }) {
       {/* Body */}
       {open && (
         <div className="ed-section-body">
+          <div className="ed-length-slider-container">
+            <label className="ed-length-label">
+              Longitud: <span className="ed-length-value">{getLengthLabel(lengthValue)}</span>
+            </label>
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={lengthValue}
+              onChange={(e) => handleLengthChange(Number(e.target.value))}
+              className="ed-length-slider"
+            />
+          </div>
+
           <AutoTextarea
             value={value ?? ''}
             onChange={(e) => onChange(config.key, e.target.value)}
@@ -227,6 +255,16 @@ export default function ScriptEditor() {
     }
   }, [local, liveContext])
 
+  const getLengthValue = useCallback((sectionKey) => {
+    const lengthKey = `${sectionKey}Length`
+    return (localRef.current ?? local)?.[lengthKey] ?? 5
+  }, [local])
+
+  const setLengthValue = useCallback((sectionKey, value) => {
+    const lengthKey = `${sectionKey}Length`
+    handleChange(lengthKey, value)
+  }, [handleChange])
+
   const handleBack = () => {
     flush()           // save immediately on leave
     setActiveScript(null)
@@ -303,6 +341,8 @@ export default function ScriptEditor() {
                 value={local[sec.key]}
                 onChange={handleChange}
                 getContext={getContext}
+                getLengthValue={getLengthValue}
+                setLengthValue={setLengthValue}
                 defaultOpen={i === 0}
               />
             ))}

@@ -1643,6 +1643,74 @@ html, body {
   font-style: italic;
 }
 
+.ed-length-slider-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0 0 var(--space-3) 0;
+  margin: 0 0 var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ed-length-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ed-length-value {
+  color: var(--section-color, var(--color-gold));
+  font-weight: 600;
+}
+
+.ed-length-slider {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-surface-hover);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  accent-color: var(--section-color, var(--color-gold));
+}
+
+.ed-length-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--section-color, var(--color-gold));
+  border: 2px solid var(--color-bg-base);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0);
+}
+
+.ed-length-slider::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--section-color, var(--color-gold)) 20%, transparent);
+  transform: scale(1.2);
+}
+
+.ed-length-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--section-color, var(--color-gold));
+  border: 2px solid var(--color-bg-base);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.ed-length-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+}
+
 .ai-btn {
   display: inline-flex;
   align-items: center;
@@ -1800,6 +1868,35 @@ html, body {
   color: var(--color-text-primary);
 }
 
+.ai-variant:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.ai-variants.is-regenerating {
+  position: relative;
+}
+
+.ai-regenerating-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-lg);
+}
+
+.ai-regen-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid color-mix(in srgb, var(--section-color, var(--color-gold)) 25%, transparent);
+  border-top-color: var(--section-color, var(--color-gold));
+  border-radius: 50%;
+  animation: ai-spin 0.7s linear infinite;
+}
+
 /* Footer */
 
 .ai-panel-footer {
@@ -1826,9 +1923,15 @@ html, body {
   transition: all var(--duration-fast) var(--ease-out);
 }
 
-.ai-regen-btn:hover {
+.ai-regen-btn:hover:not(:disabled) {
   color: var(--color-gold);
   background: color-mix(in srgb, var(--color-gold) 8%, transparent);
+}
+
+.ai-regen-btn:disabled,
+.ai-regen-btn.is-loading {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .ai-close-btn {
@@ -1845,9 +1948,14 @@ html, body {
   transition: all var(--duration-fast) var(--ease-out);
 }
 
-.ai-close-btn:hover {
+.ai-close-btn:hover:not(:disabled) {
   color: var(--color-text-primary);
   background: var(--color-surface-hover);
+}
+
+.ai-close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ─── Keyframe Animations ─────────────────────────────────────────────────── */
