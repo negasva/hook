@@ -2385,6 +2385,29 @@ html, body {
   background: var(--color-gold-subtle);
 }
 
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition:
+    border-color var(--duration-fast),
+    color var(--duration-fast),
+    background var(--duration-fast);
+}
+
+.logout-btn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: color-mix(in srgb, #ef4444 8%, transparent);
+}
+
 /* ─── Sidebar: rename input + action buttons ──────────────────────────────── */
 
 .sb-group-name-input {
@@ -2823,4 +2846,34 @@ html, body {
   line-height: var(--leading-normal);
   opacity: 0.6;
   font-size: 11px;
+}
+
+.login-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.login-toggle {
+  background: none;
+  border: none;
+  color: var(--color-gold);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  text-decoration: none;
+  padding: var(--space-1);
+  margin: 0 auto;
+}
+
+.login-toggle:hover {
+  color: color-mix(in srgb, var(--color-gold) 120%, white);
+  text-decoration: underline;
+}
+
+.login-toggle:active {
+  transform: scale(0.98);
 }

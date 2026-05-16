@@ -8,6 +8,7 @@ import { useScriptStore } from '../store/useScriptStore'
 import { useUIStore } from '../store/useUIStore'
 import { useDialog } from '../hooks/useDialog'
 import { useDataInit } from '../hooks/useDataInit'
+import { supabase } from '../lib/supabase'
 
 /* ─── Layout ──────────────────────────────────────────────────────────────── */
 
@@ -206,6 +207,13 @@ function Header() {
           title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
         >
           <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={13} />
+        </button>
+        <button
+          className="logout-btn"
+          onClick={() => supabase?.auth.signOut()}
+          title="Cerrar sesión"
+        >
+          <Icon name="log-out" size={13} />
         </button>
         <div className="header-dot" style={{ '--dot': '#22c55e' }} />
         <div className="header-dot" style={{ '--dot': 'var(--color-gold)' }} />
