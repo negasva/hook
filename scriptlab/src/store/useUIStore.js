@@ -32,4 +32,8 @@ export const useUIStore = create((set) => ({
   dialog: null,
   showDialog: (opts) => set({ dialog: opts }),
   hideDialog: () => set({ dialog: null }),
+
+  // ── Mobile panel (sidebar | editor | context) ──
+  mobilePanel: 'sidebar',
+  setMobilePanel: (p) => set({ mobilePanel: p }),
 }))
